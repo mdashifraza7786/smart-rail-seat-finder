@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Rail Seat Finder</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #0a0e17;
+      --bg-card: rgba(25, 32, 50, 0.6);
+      --border-card: rgba(255, 255, 255, 0.08);
+      --accent: #3b82f6;
+      --accent-glow: rgba(59, 130, 246, 0.35);
+      --accent-success: #10b981;
+      --accent-warning: #f59e0b;
+      --accent-danger: #ef4444;
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --gradient-primary: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+      --gradient-success: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      --gradient-warning: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      --font-title: 'Outfit', sans-serif;
+      --font-body: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: var(--font-body);
+      min-height: 100vh;
+      overflow-x: hidden;
+      background-image: 
+        radial-gradient(circle at 10% 20%, rgba(59, 130, 246, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 90% 80%, rgba(16, 185, 129, 0.05) 0%, transparent 40%);
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+
+    header h1 {
+      font-family: var(--font-title);
+      font-size: 2.8rem;
+      font-weight: 800;
+      background: linear-gradient(to right, #60a5fa, #34d399);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.5rem;
+      letter-spacing: -0.02em;
+    }
+
+    header p {
+      color: var(--text-muted);
+      font-size: 1.1rem;
+      font-weight: 400;
+    }
+
+    
+    .search-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-radius: 20px;
+      padding: 2rem;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      margin-bottom: 2rem;
+      transition: all 0.3s ease;
+    }
+
+    .search-form {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.5rem;
+      align-items: flex-end;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .form-group label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+    }
+
+    .form-group input, .form-group select {
+      background: rgba(10, 14, 23, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 0.8rem 1rem;
+      color: var(--text-main);
+      font-family: var(--font-body);
+      font-size: 1rem;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    .form-group input:focus, .form-group select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    .btn-search {
+      background: var(--gradient-primary);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      padding: 0.9rem 2rem;
+      font-family: var(--font-title);
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 0.5rem;
+      box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+      transition: all 0.2s ease;
+    }
+
+    .btn-search:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(59, 130, 246, 0.6);
+    }
+
+    .btn-search:active {
+      transform: translateY(0);
+    }
+
+    .btn-search:disabled {
+      background: #4b5563;
+      cursor: not-allowed;
+      box-shadow: none;
+      transform: none;
+    }
+
+    
+    .loader-container {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      margin: 3rem 0;
+      text-align: center;
+    }
+
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 4px solid rgba(59, 130, 246, 0.1);
+      border-top: 4px solid var(--accent);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 1.5rem;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .loader-container p {
+      font-size: 1.1rem;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+    }
+
+    .progress-bar {
+      width: 100%;
+      max-width: 300px;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      overflow: hidden;
+      margin-top: 0.5rem;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: var(--gradient-primary);
+      animation: progress-pulse 2s infinite ease-in-out;
+      border-radius: 10px;
+      transition: width 0.3s ease;
+    }
+
+    
+    .results-container {
+      display: none;
+    }
+
+    .section-title {
+      font-family: var(--font-title);
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-bottom: 1.2rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      padding-bottom: 0.5rem;
+    }
+
+    .section-title span.badge {
+      font-size: 0.9rem;
+      padding: 0.2rem 0.6rem;
+      border-radius: 20px;
+      font-weight: 600;
+    }
+
+    .section-title.direct span.badge {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--accent-success);
+    }
+
+    .section-title.splits span.badge {
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--accent-warning);
+    }
+
+    .section-title.connections span.badge {
+      background: rgba(59, 130, 246, 0.15);
+      color: #60a5fa;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+      margin-bottom: 3rem;
+    }
+
+    @media (min-width: 768px) {
+      .grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (min-width: 1024px) {
+      .grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 16px;
+      padding: 1.5rem;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+    }
+
+    .card.direct::before { background: var(--accent-success); }
+    .card.split::before { background: var(--accent-warning); }
+    .card.connection::before { background: var(--accent); }
+
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
+      border-color: rgba(255, 255, 255, 0.15);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 1rem;
+    }
+
+    .train-info {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .train-no {
+      font-size: 0.85rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+    }
+
+    .train-name {
+      font-family: var(--font-title);
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .status-badge {
+      font-family: var(--font-title);
+      font-weight: 700;
+      font-size: 0.85rem;
+      padding: 0.3rem 0.75rem;
+      border-radius: 8px;
+    }
+
+    .status-badge.available {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--accent-success);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .status-badge.waiting {
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--accent-warning);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    .card-body {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .journey-path {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 1.05rem;
+      font-weight: 600;
+    }
+
+    .path-arrow {
+      color: var(--text-muted);
+      font-weight: 300;
+    }
+
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.9rem;
+    }
+
+    .detail-label {
+      color: var(--text-muted);
+    }
+
+    .detail-val {
+      font-weight: 500;
+    }
+
+    .card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      padding-top: 1rem;
+    }
+
+    .price-tag {
+      font-family: var(--font-title);
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: var(--text-main);
+    }
+
+    .tag-badge {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+
+    
+    .split-ticket {
+      background: rgba(10, 14, 23, 0.5);
+      border-radius: 10px;
+      padding: 0.75rem;
+      border: 1px solid rgba(255, 255, 255, 0.03);
+    }
+
+    .split-ticket:not(:last-child) {
+      margin-bottom: 0.75rem;
+    }
+
+    .split-title {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--accent-warning);
+      margin-bottom: 0.25rem;
+    }
+
+    .split-ticket.conn .split-title {
+      color: var(--accent);
+    }
+
+    
+    .wait-badge {
+      background: rgba(59, 130, 246, 0.15);
+      color: #60a5fa;
+      font-size: 0.8rem;
+      font-weight: 700;
+      padding: 0.25rem 0.6rem;
+      border-radius: 12px;
+      border: 1px solid rgba(59, 130, 246, 0.3);
+    }
+
+    
+    .no-results-card {
+      background: rgba(239, 68, 68, 0.05);
+      border: 1px solid rgba(239, 68, 68, 0.2);
+      border-radius: 16px;
+      padding: 2rem;
+      text-align: center;
+      margin-top: 1rem;
+    }
+
+    .no-results-card h3 {
+      font-family: var(--font-title);
+      font-size: 1.4rem;
+      color: var(--accent-danger);
+      margin-bottom: 0.75rem;
+    }
+
+    .no-results-card p {
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+    }
+
+    .tips-list {
+      display: inline-block;
+      text-align: left;
+      max-width: 400px;
+      margin: 0 auto;
+    }
+
+    .tips-list li {
+      margin-bottom: 0.5rem;
+      font-size: 0.95rem;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .tips-list li::before {
+      content: '💡';
+    }
+
+    
+    .text-success { color: var(--accent-success); }
+    .text-warning { color: var(--accent-warning); }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Smart Rail Seat Finder</h1>
+      <p>Boarding Point Changes, Split Journeys & Connecting Train Strategies</p>
+    </header>
+
+    <div class="search-card">
+      <div class="search-form">
+        <div class="form-group">
+          <label for="src">Boarding Station</label>
+          <input type="text" id="src" placeholder="e.g. MFP" uppercase maxlength="5" value="MFP">
+        </div>
+        <div class="form-group">
+          <label for="dest">Destination Station</label>
+          <input type="text" id="dest" placeholder="e.g. ST" uppercase maxlength="5" value="ST">
+        </div>
+        <div class="form-group">
+          <label for="date">Journey Date</label>
+          <input type="text" id="date" placeholder="YYYYMMDD (e.g. 20260625)" maxlength="8" value="20260625">
+        </div>
+        <div class="form-group">
+          <label for="quota">Quota</label>
+          <select id="quota">
+            <option value="GN">General (GN)</option>
+            <option value="TQ">Tatkal (TQ)</option>
+            <option value="PT">Premium Tatkal (PT)</option>
+          </select>
+        </div>
+        <button id="btnSearch" class="btn-search">
+          <span>Search Seats</span>
+        </button>
+      </div>
+    </div>
+
+    
+    <div id="loader" class="loader-container">
+      <div class="spinner"></div>
+      <p id="loaderStatus">Starting search engine...</p>
+      <div class="progress-bar">
+        <div id="progressFill" class="progress-fill"></div>
+      </div>
+    </div>
+
+    
+    <div id="results" class="results-container">
+      <div id="searchStats" style="margin-bottom: 2rem; color: var(--text-muted); font-size: 0.95rem; display: flex; justify-content: space-between;">
+        <span id="statTime"></span>
+        <span id="statCalls"></span>
+      </div>
+
+      
+      <div id="directSection" class="results-section">
+        <h2 class="section-title direct">
+          <span>Direct / Boarding Change Options</span>
+          <span id="directCount" class="badge">0</span>
+        </h2>
+        <div id="directGrid" class="grid"></div>
+      </div>
+
+      
+      <div id="splitSection" class="results-section">
+        <h2 class="section-title splits">
+          <span>Split Journeys (Same Train)</span>
+          <span id="splitCount" class="badge">0</span>
+        </h2>
+        <div id="splitGrid" class="grid"></div>
+      </div>
+
+      
+      <div id="connectSection" class="results-section">
+        <h2 class="section-title connections">
+          <span>Connecting Journeys (2 Trains)</span>
+          <span id="connectCount" class="badge">0</span>
+        </h2>
+        <div id="connectGrid" class="grid"></div>
+      </div>
+
+      
+      <div id="noResultsCard" class="no-results-card hidden">
+        <h3>No Seats Found Across Any Strategy</h3>
+        <p>We searched direct routes, boarding point shifts up to 5 stations back, splits at major stations, and connecting options via major junctions.</p>
+        <ul class="tips-list">
+          <li>Try a date further out (1-2 weeks ahead).</li>
+          <li>Try searching with Tatkal quota (select TQ in dropdown).</li>
+          <li>Try alternate nearby stations for boarding/destination.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const el = (id) => document.getElementById(id);
+
+    el('src').addEventListener('input', e => e.target.value = e.target.value.toUpperCase());
+    el('dest').addEventListener('input', e => e.target.value = e.target.value.toUpperCase());
+
+    
+    const getTomorrowStr = () => {
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 3); 
+      const y = tomorrow.getFullYear();
+      const m = String(tomorrow.getMonth() + 1).padStart(2, '0');
+      const d = String(tomorrow.getDate()).padStart(2, '0');
+      return `${y}${m}${d}`;
+    };
+    if (el('date').value === '20260625') {
+      el('date').value = getTomorrowStr();
+    }
+
+    el('btnSearch').addEventListener('click', async () => {
+      const src = el('src').value.trim();
+      const dest = el('dest').value.trim();
+      const date = el('date').value.trim();
+      const quota = el('quota').value;
+
+      if (!src || !dest || !date) {
+        alert('Please fill out Boarding Station, Destination, and Date!');
+        return;
+      }
+
+      
+      el('btnSearch').disabled = true;
+      el('loader').style.display = 'flex';
+      el('results').style.display = 'none';
+      el('noResultsCard').classList.add('hidden');
+      el('progressFill').style.width = '10%';
+      el('loaderStatus').textContent = 'Finding direct trains...';
+
+      
+      let progress = 10;
+      const statusInterval = setInterval(() => {
+        progress = Math.min(progress + 5, 95);
+        el('progressFill').style.width = `${progress}%`;
+        
+        if (progress === 30) el('loaderStatus').textContent = 'Fetching routes and parsing stops...';
+        if (progress === 50) el('loaderStatus').textContent = 'Checking boarding point shifts...';
+        if (progress === 70) el('loaderStatus').textContent = 'Calculating split journey options...';
+        if (progress === 85) el('loaderStatus').textContent = 'Searching connecting junctions...';
+      }, 800);
+
+      try {
+        const response = await fetch(`/api/search?src=${src}&dest=${dest}&date=${date}&quota=${quota}`);
+        clearInterval(statusInterval);
+        
+        if (!response.ok) {
+          throw new Error('Search failed: Server returned error');
+        }
+
+        const data = await response.json();
+        renderResults(data);
+      } catch (err) {
+        clearInterval(statusInterval);
+        alert(err.message);
+      } finally {
+        el('loader').style.display = 'none';
+        el('btnSearch').disabled = false;
+      }
+    });
+
+    const isWL = (status) => {
+      return status.includes('WL') || status.includes('Waitlist');
+    };
+
+    const getStatusClass = (status) => {
+      return isWL(status) ? 'waiting' : 'available';
+    };
+
+    function renderResults(data) {
+      el('results').style.display = 'block';
+      el('progressFill').style.width = '100%';
+
+      el('statTime').textContent = `⏱️ Search Time: ${data.elapsed || 0}s`;
+      el('statCalls').textContent = `📞 API Calls: ${data.apiCallCount || 0}`;
+
+      
+      const directGrid = el('directGrid');
+      directGrid.innerHTML = '';
+      
+      const directGroups = {};
+      if (data.direct) {
+        data.direct.forEach(t => {
+          const key = `${t.trainNo}_${t.coachType}`;
+          if (!directGroups[key]) {
+            directGroups[key] = {
+              trainNo: t.trainNo,
+              trainName: t.trainName,
+              coachType: t.coachType,
+              options: []
+            };
+          }
+          directGroups[key].options.push(t);
+        });
+      }
+
+      const uniqueTrainCount = Object.keys(directGroups).length;
+      el('directCount').textContent = uniqueTrainCount;
+
+      if (uniqueTrainCount > 0) {
+        el('directSection').style.display = 'block';
+        Object.values(directGroups).forEach(g => {
+          const card = document.createElement('div');
+          card.className = 'card direct';
+          
+          let optionsHtml = '';
+          g.options.forEach(opt => {
+            const label = opt.tag === "DIRECT" ? "Direct Booking" : `Board Shift (Book from ${opt.from})`;
+            optionsHtml += `
+              <div class="split-ticket" style="margin-top: 0.5rem; background: rgba(10, 14, 23, 0.4);">
+                <div class="split-title" style="color: var(--accent-success);">${label}</div>
+                <div class="detail-row">
+                  <span>Date: ${opt.date}</span>
+                  <span class="status-badge ${getStatusClass(opt.status)}">${opt.status}</span>
+                </div>
+                <div class="detail-row" style="font-size:0.8rem; margin-top:0.25rem;">
+                  <span style="color:var(--text-muted);">Fare:</span>
+                  <span>${opt.fare}</span>
+                </div>
+              </div>
+            `;
+          });
+
+          card.innerHTML = `
+            <div class="card-header">
+              <div class="train-info">
+                <span class="train-no">${g.trainNo}</span>
+                <span class="train-name">${g.trainName}</span>
+              </div>
+              <span class="wait-badge" style="background: rgba(16, 185, 129, 0.15); color: var(--accent-success); border-color: rgba(16, 185, 129, 0.3);">
+                Class: ${g.coachType}
+              </span>
+            </div>
+            <div class="card-body" style="gap: 0.5rem;">
+              <div class="journey-path" style="margin-bottom: 0.25rem;">
+                <span>${el('src').value}</span>
+                <span class="path-arrow">→</span>
+                <span>${el('dest').value}</span>
+              </div>
+              ${optionsHtml}
+            </div>
+            <div class="card-footer">
+              <span class="price-tag" style="font-size: 1.15rem;">Options: ${g.options.length}</span>
+              <span class="tag-badge">Direct Journey</span>
+            </div>
+          `;
+          directGrid.appendChild(card);
+        });
+      } else {
+        el('directSection').style.display = 'none';
+      }
+
+      
+      const splitGrid = el('splitGrid');
+      splitGrid.innerHTML = '';
+      const splitCount = data.splits ? data.splits.length : 0;
+      el('splitCount').textContent = splitCount;
+
+      if (splitCount > 0) {
+        el('splitSection').style.display = 'block';
+        data.splits.forEach(s => {
+          const card = document.createElement('div');
+          card.className = 'card split';
+          card.innerHTML = `
+            <div class="card-header" style="margin-bottom: 0.75rem;">
+              <div class="train-info">
+                <span class="train-no">${s.leg1.trainNo}</span>
+                <span class="train-name">${s.leg1.trainName}</span>
+              </div>
+              <span class="wait-badge">Split @ ${s.splitStation}</span>
+            </div>
+            <div class="card-body" style="gap: 0.5rem;">
+              <div class="split-ticket">
+                <div class="split-title">Ticket 1 (${s.leg1.from} → ${s.leg1.to})</div>
+                <div class="detail-row">
+                  <span>Class: ${s.leg1.coachType} | ${s.leg1.date}</span>
+                  <span class="text-success" style="font-weight:700;">${s.leg1.status}</span>
+                </div>
+                <div class="detail-row" style="font-size:0.8rem; margin-top:0.2rem;">
+                  <span style="color:var(--text-muted);">Fare:</span>
+                  <span>${s.leg1.fare}</span>
+                </div>
+              </div>
+              
+              <div class="split-ticket">
+                <div class="split-title">Ticket 2 (${s.leg2.from} → ${s.leg2.to})</div>
+                <div class="detail-row">
+                  <span>Class: ${s.leg2.coachType} | ${s.leg2.date}</span>
+                  <span class="${isWL(s.leg2.status) ? 'text-warning' : 'text-success'}" style="font-weight:700;">${s.leg2.status}</span>
+                </div>
+                <div class="detail-row" style="font-size:0.8rem; margin-top:0.2rem;">
+                  <span style="color:var(--text-muted);">Fare:</span>
+                  <span>${s.leg2.fare}</span>
+                </div>
+              </div>
+            </div>
+            <div class="card-footer">
+              <span class="price-tag" style="font-size: 1.25rem;">Total: ₹${parseInt(s.leg1.fare.replace('₹','')) + parseInt(s.leg2.fare.replace('₹',''))}</span>
+              <span class="tag-badge">Split Journey</span>
+            </div>
+          `;
+          splitGrid.appendChild(card);
+        });
+      } else {
+        el('splitSection').style.display = 'none';
+      }
+
+      
+      const connectGrid = el('connectGrid');
+      connectGrid.innerHTML = '';
+      const connectCount = data.connections ? data.connections.length : 0;
+      el('connectCount').textContent = connectCount;
+
+      if (connectCount > 0) {
+        el('connectSection').style.display = 'block';
+        data.connections.forEach(c => {
+          const arrTime = c.leg1.time?.arrive || '?';
+          const depTime = c.leg2.time?.depart || '?';
+          
+          const card = document.createElement('div');
+          card.className = 'card connection';
+          card.innerHTML = `
+            <div class="card-header" style="margin-bottom: 0.75rem;">
+              <div class="train-info">
+                <span class="train-no">Via ${c.junction}</span>
+                <span class="train-name">Connecting Trains</span>
+              </div>
+              <span class="wait-badge">Layover: ${c.gapHours}h</span>
+            </div>
+            <div class="card-body" style="gap: 0.5rem;">
+              <div class="split-ticket conn">
+                <div class="split-title" style="color:#60a5fa;">Leg 1: Train ${c.leg1.trainNo} (${c.leg1.from} → ${c.leg1.to})</div>
+                <div class="detail-row">
+                  <span>Class: ${c.leg1.coachType} | ${c.leg1.date}</span>
+                  <span class="text-success" style="font-weight:700;">${c.leg1.status}</span>
+                </div>
+                <div class="detail-row" style="font-size:0.8rem; margin-top:0.2rem;">
+                  <span>Arrives ${c.junction} @ ${arrTime}</span>
+                  <span>Fare: ${c.leg1.fare}</span>
+                </div>
+              </div>
+              
+              <div class="split-ticket conn">
+                <div class="split-title" style="color:#60a5fa;">Leg 2: Train ${c.leg2.trainNo} (${c.leg2.from} → ${c.leg2.to})</div>
+                <div class="detail-row">
+                  <span>Class: ${c.leg2.coachType} | ${c.leg2.date}</span>
+                  <span class="${isWL(c.leg2.status) ? 'text-warning' : 'text-success'}" style="font-weight:700;">${c.leg2.status}</span>
+                </div>
+                <div class="detail-row" style="font-size:0.8rem; margin-top:0.2rem;">
+                  <span>Departs ${c.junction} @ ${depTime}</span>
+                  <span>Fare: ${c.leg2.fare}</span>
+                </div>
+              </div>
+            </div>
+            <div class="card-footer">
+              <span class="price-tag" style="font-size: 1.25rem;">Total: ₹${parseInt(c.leg1.fare.replace('₹','')) + parseInt(c.leg2.fare.replace('₹',''))}</span>
+              <span class="tag-badge">Connecting</span>
+            </div>
+          `;
+          connectGrid.appendChild(card);
+        });
+      } else {
+        el('connectSection').style.display = 'none';
+      }
+
+      
+      if (directCount === 0 && splitCount === 0 && connectCount === 0) {
+        el('noResultsCard').classList.remove('hidden');
+      }
+    }
+  </script>
+</body>
+</html>
