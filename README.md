@@ -1,3 +1,15 @@
+## Disclaimer
+
+> [!WARNING]
+> **For Educational Purposes Only.**
+> This project is designed solely for educational, research, and personal validation purposes. It is **not** an official application of Indian Railways or IRCTC.
+>
+> This tool functions by mimicking standard browser requests and uses unofficial endpoints parsed directly from web sessions. It does **not** use official B2B booking APIs or GDS platforms.
+>
+> Excessive requests or scraping can lead to temporary or permanent IP blocks from the official servers. The author is not responsible for any misuse, rate limiting, or tracking resulting from the utilization of this repository. Always use responsibly and adhere to IRCTC's terms of service.
+
+---
+
 # Smart Rail Seat Finder
 
 A smart ticket search engine and finder for Indian Railways (IRCTC) that maximizes the chance of finding **confirmed and available seats** by executing advanced ticketing strategies: Direct bookings, Boarding Point Changes, Split Journeys on the same train, and Connecting Train routing (via major hubs).
@@ -65,12 +77,3 @@ node server.js <Boarding_Station> <Destination_Station> <Date_YYYYMMDD> <Quota_C
 
 ---
 
-## Disclaimer
-
-> [!WARNING]
-> **For Educational Purposes Only.**
-> This project is designed solely for educational, research, and personal validation purposes. It is **not** an official application of Indian Railways or IRCTC.
->
-> This tool functions by mimicking standard browser requests and uses unofficial endpoints parsed directly from web sessions. It does **not** use official B2B booking APIs or GDS platforms.
->
-> Excessive requests or scraping can lead to temporary or permanent IP blocks from the official servers. The author is not responsible for any misuse, rate limiting, or tracking resulting from the utilization of this repository. Always use responsibly and adhere to IRCTC's terms of service.
